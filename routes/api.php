@@ -15,6 +15,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:api')->group(function () {
     Route::post('/chat/send', [MessageController::class, 'sendMessage']);
     Route::get('/chat/messages/{user_id}', [MessageController::class, 'getMessages']);
-    Route::patch('/chat/read/{message_id}', [MessageController::class, 'markAsRead']);
+    Route::patch('/chat/read/{message_id}', [MessageController::class, 'markMessageAsRead']);
+    Route::get('/online', [MessageController::class, 'setOnline']);
+    Route::get('/offline', [MessageController::class, 'setOffline']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });

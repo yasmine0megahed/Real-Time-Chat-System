@@ -16,11 +16,6 @@ class Message extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
-    public function scopeUnread($query)
-    {
-        return $query->where('status', 'delivered');
-    }
-    public function isOnline(){
-        return cache()->has('user-is-online-' . $this->id);
-    }
+
+
 }

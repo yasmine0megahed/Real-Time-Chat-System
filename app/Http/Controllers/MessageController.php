@@ -4,27 +4,33 @@ namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
 use App\Http\Requests\message\StoreMessageRequest;
+use App\Http\Resources\MessageResource;
 use App\Models\Message;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MessageController extends Controller
 {
 
-    public function getMessages($user_id)
+    public function getMessages($receiver_id)
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
-            if ($user->id != $user_id) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-            $messages = Message::where('receiver_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
+        // Get messages where the user is either the sender or the receiver
+        $messages = Message::where(function ($query) use ($user, $receiver_id) {
+            $query->where('sender_id', $user->id)
+                  ->Where('receiver_id', $receiver_id);
+        })->orWhere(function ($query) use ($user, $receiver_id) {
+            $query->where('sender_id', $receiver_id)
+                  ->Where('receiver_id', $user->id);
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+            Log::info($messages);
             return response()->json([
-                'data' => $messages->items(), // Messages array==>paginate
+                'data' =>MessageResource::collection($messages), // Messages array==>paginate
                 'meta' => [
                     'current_page' => $messages->currentPage(),
                     'total' => $messages->total(),
@@ -86,7 +92,7 @@ class MessageController extends Controller
             // If there are any delivered but unread messages, broadcast them
             foreach ($messages as $message) {
                 // fire the event
-                broadcast(new MessageSent($message));  
+                broadcast(new MessageSent($message));
             }
 
             return response()->json(['message' => 'User is online and unread messages delivered'], 200);

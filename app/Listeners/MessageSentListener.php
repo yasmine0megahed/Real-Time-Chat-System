@@ -22,10 +22,6 @@ class MessageSentListener
      */
     public function handle(MessageSent $event): void
     {
-        Log::info('Message Sent:', [
-            'message' => $event->message->message,
-            'sender_id' => $event->message->sender_id,
-            'receiver_id' => $event->message->receiver_id,
-        ]);
+
     }
 }
